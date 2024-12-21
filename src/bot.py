@@ -13,7 +13,7 @@ import easyocr
 import os
 import pprint
 import warnings
-from src.generate_summary import GraphState, ocr, report, generate_summary, anamoly_detection, value_extractor, root_cause, root_cause_1,Translate_Summary 
+from src.generate_summary import GraphState, ocr, report, generate_summary, anamoly_detection, value_extractor, root_cause, root_cause_1,Translate_Summary, remove_details
 warnings.filterwarnings("ignore", category=FutureWarning, module="torch")
 
 def graph_workflow():
@@ -26,10 +26,12 @@ def graph_workflow():
     workflow.add_node("value_extractor_node", value_extractor)
     workflow.add_node("root_cause_node", root_cause)
     workflow.add_node("root_cause_1_node", root_cause_1)
+    workflow.add_node("remove_details", remove_details)
 
     workflow.add_edge(START, "ocr_node")
     workflow.add_edge("ocr_node", "report_node")
-    workflow.add_edge("report_node", "generate_summary_node")
+    workflow.add_edge("report_node","remove_details")
+    workflow.add_edge("remove_details", "generate_summary_node")
     workflow.add_edge("generate_summary_node","Translation_node")
     workflow.add_edge("Translation_node",END)
 

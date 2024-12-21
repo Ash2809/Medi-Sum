@@ -12,6 +12,8 @@ import google.generativeai as genai
 import easyocr
 import os
 import warnings
+import re
+import spacy
 warnings.filterwarnings("ignore", category=FutureWarning, module="torch")
 
 
@@ -40,6 +42,32 @@ def ocr(state):
     return {"report" : response_text}
 
 
+def redact_sensitive_info(report, doc):
+    redacted_text = report  # Initialize redacted_text with the original report
+    for ent in doc.ents:
+        if ent.label_ == "PERSON":  
+            redacted_text = redacted_text.replace(ent.text, "[REDACTED]")
+    
+    # Redact phone numbers and sensitive information
+    redacted_text = re.sub(r'\b\d{10}(?:/\d{10})?\b', '[REDACTED]', redacted_text)
+    redacted_text = re.sub(
+        r'(?i)(?:deliver to|patient address|sample collected at)[:\s].(?:\n|$)',
+        '[REDACTED]\n',
+        redacted_text
+    )
+
+    return redacted_text
+
+def remove_details(state):
+    report = state["generation"]
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(report)
+    redacted_text = redact_sensitive_info(report, doc)
+
+    print(redacted_text)
+    return {"generation" : redacted_text}
+
+
 def report(state):
     report = state["report"]
     # generation = state["generation"]
@@ -53,7 +81,7 @@ def generate_summary(state):
     # summary = state["summary"]
 
     response = llm.invoke(f"""You are an Expert in Evaluating medical Reports.You are given the report, 
-                          Based on the report Devise a comprehensive of the report in not more than 100 words.
+                          Based on the report Devise a comprehensive in layman terms of the report in not more than 100 words.
                           report {generation}""").content
     print(response)
     
