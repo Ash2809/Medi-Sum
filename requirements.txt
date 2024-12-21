@@ -9,7 +9,12 @@ tiktoken
 langgraph
 langchainhub
 pypdf
-google-cloud-vision
+# google-cloud-vision
 easyocr
+# langchain-astradb
+# tiktoken
+# langchain-core
+# langchain-astradb
+
 
 -e .
